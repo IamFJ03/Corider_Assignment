@@ -9,9 +9,12 @@ import {
   TouchableOpacity,
   Image,
   Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 import user from '../assets/OIP.jpeg';
 
 const ChatScreen = () => {
@@ -47,13 +50,11 @@ const ChatScreen = () => {
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
-
     const newMessage = {
       id: Date.now(),
       message: inputMessage,
       sender: { self: true }
     };
-
     setMessages(prev => [...prev, newMessage]);
     setInputMessage('');
   };
@@ -74,42 +75,62 @@ const ChatScreen = () => {
     ) : null;
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <View>
-          <TouchableOpacity style={styles.backButton}>
-            <Icon name="arrow-back" size={24} color="black" style={{ marginTop:5, marginBottom:5 }} />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => setShowPicture(true)}>
-            <Image source={user} style={{ height: 25, width: 25, borderRadius: 50 }} />
-          </TouchableOpacity>
-</View>
-          <View>
+          <View style={{top:2}}>
+            <TouchableOpacity style={styles.backButton}>
+              <Icon name="arrow-back" size={30} color="black" style={{ marginVertical: 5 }} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setShowPicture(true)} style={{top:15}}>
+              <Image source={user} style={{ height: 40, width: 40, borderRadius: 50 }} />
+            </TouchableOpacity>
+          </View>
+          <View style={{marginTop:20}}>
+            <View style={{flexDirection:'row'}}>
             <Text style={styles.tripTitle}>Trip 1</Text>
-            <Text style={styles.subHeader}>From IGI Airport, T3 To Sector 28</Text>
+            <Icon2 name="square-edit-outline" size={30} color="black" style={{left:230}}/>
+            </View>
+            <View style={{top:15}}>
+              <Text style={styles.subHeader}>
+                From <Text style={{ fontWeight: 'bold' }}>IGI Airport, T3</Text>
+              </Text>
+              <Text style={styles.subHeader}>
+                To <Text style={{ fontWeight: 'bold' }}>Sector 28</Text>
+              </Text>
+            </View>
+
           </View>
         </View>
 
-        {/* Custom Menu */}
-        <View>
-          <TouchableOpacity onPress={() => setShowMenu(prev => !prev)}>
-            <Icon name="more-vert" size={24} color="black" />
+        <View style={{top:40}}>
+          <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
+            <Icon name="more-vert" size={30} color="black" />
           </TouchableOpacity>
 
           {showMenu && (
             <View style={styles.dropdownMenu}>
-              <TouchableOpacity onPress={() => console.log('Members')} style={{paddingVertical:5, borderBottomWidth: 1,borderBottomColor:'grey'}}><Text>Members</Text></TouchableOpacity>
-              <TouchableOpacity onPress={() => console.log('Share Number')}  style={{paddingVertical:5, borderBottomWidth: 1,borderBottomColor:'grey'}}><Text>Share Number</Text></TouchableOpacity>
-              <TouchableOpacity onPress={() => console.log('Report')}  style={{paddingVertical:5}}><Text>Report</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => console.log('Members')} style={styles.menuItem}>
+
+                <Icon2 name="account-group-outline" size={30} color="black" />
+
+                <Text style={{ top: 5,fontSize:17,fontWeight:'bold'}}>Members</Text>
+
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => console.log('Share Number')} style={styles.menuItem}>
+                <Icon2 name="phone-outline" size={30} color="black" />
+                <Text style={{ top: 5,fontSize:17,fontWeight:'bold'}}>Share Number</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => console.log('Report')} style={styles.menuItem}>
+                <Icon2 name="alert-outline" size={30} color="black" />
+                <Text style={{ top: 5, fontSize:17,fontWeight:'bold' }}>Report</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
       </View>
 
-      {/* Profile Picture Modal */}
       <Modal visible={showPicture} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -120,33 +141,31 @@ const ChatScreen = () => {
         </TouchableOpacity>
       </Modal>
 
-      {/* Chat List */}
       <FlatList
         inverted
-        data={[...messages].reverse()}
+        data={messages}
         keyExtractor={item => item.id.toString()}
         renderItem={renderItem}
         onEndReached={fetchMessages}
         onEndReachedThreshold={0.2}
         ListFooterComponent={renderFooter}
+        keyboardShouldPersistTaps="handled"
       />
 
-      {/* Input Section */}
       <View style={styles.inputContainer}>
         {showActions && (
           <View style={styles.actionBubble}>
             <TouchableOpacity style={styles.actionIcon}>
-              <Icon name="photo-camera" size={20} color="#fff" />
+              <Icon2 name="camera-outline" size={27} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionIcon}>
-              <Icon name="videocam" size={20} color="#fff" />
+              <Icon2 name="video-outline" size={27} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionIcon}>
-              <Icon name="insert-drive-file" size={20} color="#fff" />
+              <Icon2 name="file-document-outline" size={27} color="#fff" />
             </TouchableOpacity>
           </View>
         )}
-
         <TextInput
           style={styles.input}
           placeholder="Reply to @Rohit Yadav"
@@ -160,7 +179,7 @@ const ChatScreen = () => {
           <Icon name="send" size={24} color="#444" />
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -170,6 +189,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: {
     padding: 15,
+    height: 150,
     backgroundColor: '#f3f3f3',
     borderBottomWidth: 1,
     borderColor: '#ddd',
@@ -187,16 +207,15 @@ const styles = StyleSheet.create({
   },
   tripTitle: {
     fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 4,
+    fontSize: 25,
+    
   },
   subHeader: {
-    fontSize: 13,
+    fontSize: 20,
     color: '#444',
   },
   dropdownMenu: {
-    width:120,
-    
+    width: 180,
     position: 'absolute',
     top: 30,
     right: 0,
@@ -206,7 +225,15 @@ const styles = StyleSheet.create({
     padding: 8,
     zIndex: 10,
   },
+  menuItem: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingVertical: 7,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
   messageContainer: {
+    
     marginVertical: 4,
     marginHorizontal: 10,
     padding: 10,
@@ -219,10 +246,10 @@ const styles = StyleSheet.create({
   },
   other: {
     alignSelf: 'flex-start',
-    backgroundColor: 'white',
+    backgroundColor: '#f1f1f1',
   },
   messageText: {
-    fontSize: 15,
+    fontSize: 17,
   },
   selfText: {
     color: 'white',
@@ -255,7 +282,7 @@ const styles = StyleSheet.create({
   actionBubble: {
     position: 'absolute',
     bottom: 60,
-    left: 290,
+    right: 15,
     backgroundColor: '#0A8F37',
     flexDirection: 'row',
     padding: 10,
