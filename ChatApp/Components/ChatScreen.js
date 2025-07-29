@@ -15,7 +15,11 @@ import {
 import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
-import user from '../assets/OIP.jpeg';
+
+import img1 from '../assets/image1.jpg';
+import img2 from '../assets/image2.jpg';
+import img3 from '../assets/image3.jpg';
+import img4 from '../assets/image4.jpg';
 
 const ChatScreen = () => {
   const [messages, setMessages] = useState([]);
@@ -76,23 +80,29 @@ const ChatScreen = () => {
 
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <View style={{top:2}}>
+          <View style={{ top: 12 }}>
             <TouchableOpacity style={styles.backButton}>
               <Icon name="arrow-back" size={30} color="black" style={{ marginVertical: 5 }} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowPicture(true)} style={{top:15}}>
-              <Image source={user} style={{ height: 40, width: 40, borderRadius: 50 }} />
+            <TouchableOpacity onPress={() => setShowPicture(true)} style={styles.imageGroup}>
+              <View style={styles.imageRow}>
+                <Image source={img1} style={styles.smallImage} />
+                <Image source={img2} style={styles.smallImage} />
+              </View>
+              <View style={styles.imageRow}>
+                <Image source={img3} style={styles.smallImage} />
+                <Image source={img4} style={styles.smallImage} />
+              </View>
             </TouchableOpacity>
           </View>
-          <View style={{marginTop:20}}>
-            <View style={{flexDirection:'row'}}>
-            <Text style={styles.tripTitle}>Trip 1</Text>
-            <Icon2 name="square-edit-outline" size={30} color="black" style={{left:230}}/>
+          <View style={{ marginTop: 20 }}>
+            <View style={{ flexDirection: 'row' }}>
+              <Text style={styles.tripTitle}>Trip 1</Text>
+              <Icon2 name="square-edit-outline" size={30} color="black" style={{ left: 230 }} />
             </View>
-            <View style={{top:15}}>
+            <View style={{ top: 15 }}>
               <Text style={styles.subHeader}>
                 From <Text style={{ fontWeight: 'bold' }}>IGI Airport, T3</Text>
               </Text>
@@ -100,11 +110,10 @@ const ChatScreen = () => {
                 To <Text style={{ fontWeight: 'bold' }}>Sector 28</Text>
               </Text>
             </View>
-
           </View>
         </View>
 
-        <View style={{top:40}}>
+        <View style={{ top: 40 }}>
           <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
             <Icon name="more-vert" size={30} color="black" />
           </TouchableOpacity>
@@ -112,19 +121,16 @@ const ChatScreen = () => {
           {showMenu && (
             <View style={styles.dropdownMenu}>
               <TouchableOpacity onPress={() => console.log('Members')} style={styles.menuItem}>
-
                 <Icon2 name="account-group-outline" size={30} color="black" />
-
-                <Text style={{ top: 5,fontSize:17,fontWeight:'bold'}}>Members</Text>
-
+                <Text style={{ top: 5, fontSize: 17, fontWeight: 'bold' }}>Members</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => console.log('Share Number')} style={styles.menuItem}>
                 <Icon2 name="phone-outline" size={30} color="black" />
-                <Text style={{ top: 5,fontSize:17,fontWeight:'bold'}}>Share Number</Text>
+                <Text style={{ top: 5, fontSize: 17, fontWeight: 'bold' }}>Share Number</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => console.log('Report')} style={styles.menuItem}>
                 <Icon2 name="alert-outline" size={30} color="black" />
-                <Text style={{ top: 5, fontSize:17,fontWeight:'bold' }}>Report</Text>
+                <Text style={{ top: 5, fontSize: 17, fontWeight: 'bold' }}>Report</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -137,7 +143,19 @@ const ChatScreen = () => {
           onPress={() => setShowPicture(false)}
           activeOpacity={1}
         >
-          <Image source={user} style={styles.modalImage} />
+          <View>
+            <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Group Members</Text>
+            <View style={styles.imageGroup}>
+              <View style={styles.imageRow}>
+                <Image source={img1} style={styles.bigImage} />
+                <Image source={img2} style={styles.bigImage} />
+              </View>
+              <View style={styles.imageRow}>
+                <Image source={img3} style={styles.bigImage} />
+                <Image source={img4} style={styles.bigImage} />
+              </View>
+            </View>
+          </View>
         </TouchableOpacity>
       </Modal>
 
@@ -205,10 +223,10 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 10,
   },
+
   tripTitle: {
     fontWeight: 'bold',
     fontSize: 25,
-    
   },
   subHeader: {
     fontSize: 20,
@@ -233,7 +251,6 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
   },
   messageContainer: {
-    
     marginVertical: 4,
     marginHorizontal: 10,
     padding: 10,
@@ -303,9 +320,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  modalImage: {
-    height: 200,
-    width: 200,
-    borderRadius: 100,
+  imageGroup: {
+    width: 45,
+    height: 45,
+    flexWrap: 'wrap',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 30,
+    overflow: 'hidden',
+    marginTop: 10
+  },
+  imageRow: {
+    flexDirection: 'row',
+  },
+  smallImage: {
+    width: 20,
+    height: 20,
+    margin: 0.5,
+    borderRadius: 3,
   },
 });
