@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
   TextInput,
   TouchableOpacity,
   Image,
@@ -12,7 +11,6 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -20,71 +18,75 @@ import img1 from '../assets/image1.jpg';
 import img2 from '../assets/image2.jpg';
 import img3 from '../assets/image3.jpg';
 import img4 from '../assets/image4.jpg';
+import group4 from '../assets/Group4.png';
+import profile from '../assets/Profile.png'
+import group1 from '../assets/Group1.png'
 
 const ChatScreen = () => {
-  const [messages, setMessages] = useState([]);
-  const [page, setPage] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [showActions, setShowActions] = useState(false);
-  const [showPicture, setShowPicture] = useState(false);
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
+      sender: { self: false, avatar: group1 },
+    },
+    {
+      id: 2,
+      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
+      sender: { self: false, avatar:  profile},
+    },
+    {
+      id: 3,
+      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
+      sender: { self: true, avatar: img2 },
+    },
+    {
+      id: 4,
+      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
+      sender: { self: false, avatar: group4 },
+    },
+  ]);
+
   const [inputMessage, setInputMessage] = useState('');
+  const [showActions, setShowActions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-
-  const fetchMessages = async () => {
-    if (loading || !hasMore) return;
-    setLoading(true);
-    try {
-      const res = await axios.get(`https://qa.corider.in/assignment/chat?page=${page}`);
-      if (res.data?.chats?.length) {
-        setMessages(prev => [...res.data.chats.reverse(), ...prev]);
-        setPage(prev => prev + 1);
-      } else {
-        setHasMore(false);
-      }
-    } catch (err) {
-      console.error('API error:', err);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchMessages();
-  }, []);
+  const [showPicture, setShowPicture] = useState(false);
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
     const newMessage = {
       id: Date.now(),
       message: inputMessage,
-      sender: { self: true }
+      sender: { self: true },
     };
     setMessages(prev => [...prev, newMessage]);
     setInputMessage('');
   };
 
   const renderItem = ({ item }) => (
-    <View style={[styles.messageContainer, item.sender.self ? styles.self : styles.other]}>
-      <Text style={[styles.messageText, item.sender.self ? styles.selfText : styles.otherText]}>
-        {item.message}
-      </Text>
+    <View style={[styles.messageRow, item.sender.self ? styles.rowReverse : null]}>
+      {!item.sender.self && item.sender.avatar && (
+        <Image source={item.sender.avatar} style={styles.avatar} />
+      )}
+      <View style={[styles.messageContainer, item.sender.self ? styles.self : styles.other]}>
+        <Text style={[styles.messageText, item.sender.self ? styles.selfText : styles.otherText]}>
+          {item.message}
+        </Text>
+      </View>
     </View>
   );
 
-  const renderFooter = () =>
-    loading ? (
-      <View style={styles.loading}>
-        <ActivityIndicator size="small" color="#555" />
-      </View>
-    ) : null;
-
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={80}
+    >
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <View style={{ top: 12 }}>
+          <View style={{ top: 18 }}>
             <TouchableOpacity style={styles.backButton}>
-              <Icon name="arrow-back" size={30} color="black" style={{ marginVertical: 5 }} />
+              <Icon name="arrow-back" size={30} color="black" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setShowPicture(true)} style={styles.imageGroup}>
               <View style={styles.imageRow}>
@@ -120,23 +122,24 @@ const ChatScreen = () => {
 
           {showMenu && (
             <View style={styles.dropdownMenu}>
-              <TouchableOpacity onPress={() => console.log('Members')} style={styles.menuItem}>
-                <Icon2 name="account-group-outline" size={30} color="black" />
-                <Text style={{ top: 5, fontSize: 17, fontWeight: 'bold' }}>Members</Text>
+              <TouchableOpacity style={styles.menuItem}>
+                <Icon2 name="account-group-outline" size={20} color="black" />
+                <Text style={{ fontSize: 14, fontWeight: '600' }}>Members</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => console.log('Share Number')} style={styles.menuItem}>
-                <Icon2 name="phone-outline" size={30} color="black" />
-                <Text style={{ top: 5, fontSize: 17, fontWeight: 'bold' }}>Share Number</Text>
+              <TouchableOpacity style={styles.menuItem}>
+                <Icon2 name="phone-outline" size={20} color="black" />
+                <Text style={{ fontSize: 14, fontWeight: '600' }}>Share Number</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => console.log('Report')} style={styles.menuItem}>
-                <Icon2 name="alert-outline" size={30} color="black" />
-                <Text style={{ top: 5, fontSize: 17, fontWeight: 'bold' }}>Report</Text>
+              <TouchableOpacity style={styles.menuItem}>
+                <Icon2 name="alert-outline" size={20} color="black" />
+                <Text style={{ fontSize: 14, fontWeight: '600' }}>Report</Text>
               </TouchableOpacity>
             </View>
           )}
         </View>
       </View>
 
+      {/* Modal for group photos */}
       <Modal visible={showPicture} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
@@ -159,52 +162,62 @@ const ChatScreen = () => {
         </TouchableOpacity>
       </Modal>
 
-      <FlatList
-        inverted
-        data={messages}
-        keyExtractor={item => item.id.toString()}
-        renderItem={renderItem}
-        onEndReached={fetchMessages}
-        onEndReachedThreshold={0.2}
-        ListFooterComponent={renderFooter}
-        keyboardShouldPersistTaps="handled"
-      />
+      {/* Chat Area */}
+      <View style={{flex:1}}>
+        <View style={styles.timestampContainer}>
+  <View style={styles.line} />
+  <Text style={styles.timestamp}>12 JAN, 2023</Text>
+  <View style={styles.line} />
+</View>
 
+        <FlatList
+          inverted
+          data={messages}
+          keyExtractor={item => item.id.toString()}
+          renderItem={renderItem}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 10 }}
+        />
+      </View>
       <View style={styles.inputContainer}>
-        {showActions && (
-          <View style={styles.actionBubble}>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Icon2 name="camera-outline" size={27} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Icon2 name="video-outline" size={27} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Icon2 name="file-document-outline" size={27} color="#fff" />
-            </TouchableOpacity>
-          </View>
-        )}
         <TextInput
           style={styles.input}
           placeholder="Reply to @Rohit Yadav"
           value={inputMessage}
           onChangeText={setInputMessage}
+          placeholderTextColor="#999"
         />
         <TouchableOpacity onPress={() => setShowActions(!showActions)} style={styles.iconButton}>
-          <Icon name="attach-file" size={24} color="#444" />
+          <Icon name="attach-file" size={22} color="#444" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleSend}>
-          <Icon name="send" size={24} color="#444" />
+        <TouchableOpacity onPress={handleSend} style={styles.iconButton}>
+          <Icon name="send" size={22} color="#444" />
         </TouchableOpacity>
+
+        {showActions && (
+          <View style={styles.actionBubble}>
+            <TouchableOpacity style={styles.actionIcon}>
+              <Icon2 name="camera-outline" size={22} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionIcon}>
+              <Icon2 name="video-outline" size={22} color="#fff" />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionIcon}>
+              <Icon2 name="file-document-outline" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
+      <View style={{height:50}}></View>
     </KeyboardAvoidingView>
   );
 };
 
 export default ChatScreen;
 
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: 'rgba(255, 250, 245, 1)' },
   header: {
     padding: 15,
     height: 150,
@@ -223,13 +236,14 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 10,
   },
-
   tripTitle: {
     fontWeight: 'bold',
-    fontSize: 25,
+    fontSize: 24,
+    fontWeight:700
   },
   subHeader: {
-    fontSize: 20,
+    fontSize: 16,
+    fontWeight: 500,
     color: '#444',
   },
   dropdownMenu: {
@@ -246,13 +260,11 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     gap: 10,
-    paddingVertical: 7,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
   messageContainer: {
-    marginVertical: 4,
-    marginHorizontal: 10,
     padding: 10,
     borderRadius: 10,
     maxWidth: '80%',
@@ -260,57 +272,72 @@ const styles = StyleSheet.create({
   self: {
     alignSelf: 'flex-end',
     backgroundColor: '#007AFF',
+    elevation:10
   },
   other: {
     alignSelf: 'flex-start',
     backgroundColor: '#f1f1f1',
+    elevation:10
   },
   messageText: {
-    fontSize: 17,
+    fontSize: 14,
+    fontWeight:400
   },
   selfText: {
+    
     color: 'white',
   },
   otherText: {
     color: 'black',
   },
-  loading: {
-    padding: 10,
-    alignItems: 'center',
-  },
   inputContainer: {
-    flexDirection: 'row',
-    padding: 15,
-    borderTopWidth: 1,
-    borderColor: '#eee',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  input: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#aaa',
-    borderRadius: 20,
-    paddingHorizontal: 15,
-    marginRight: 10,
-    backgroundColor: '#f9f9f9',
-  },
-  actionBubble: {
-    position: 'absolute',
-    bottom: 60,
-    right: 15,
-    backgroundColor: '#0A8F37',
-    flexDirection: 'row',
-    padding: 10,
-    borderRadius: 20,
-    elevation: 5,
-    zIndex: 10,
-    alignItems: 'center',
-  },
-  actionIcon: {
-    marginHorizontal: 6,
-  },
+  flexDirection: 'row',
+  alignItems: 'center',
+  width:'90%',
+  left:'5%',
+  padding: 10,
+  
+  borderTopWidth: 1,
+  borderColor: '#eee',
+  backgroundColor: '#fff',
+},
+
+
+input: {
+  flex: 1,
+  
+  backgroundColor:'white',
+  
+  paddingHorizontal: 15,
+  backgroundColor: '#f5f5f5',
+  marginRight: 6,
+  fontSize: 14,
+},
+
+iconButton: {
+  paddingHorizontal: 6,
+},
+
+actionBubble: {
+  position: 'absolute',
+  bottom: 65,
+  right:2,
+  height:44,
+  width:124,
+  backgroundColor: '#0A8F37',
+  flexDirection: 'row',
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+  borderRadius: 22,
+  elevation: 5,
+  zIndex: 10,
+  alignItems: 'center',
+},
+
+actionIcon: {
+  marginHorizontal: 6,
+},
+
   iconButton: {
     paddingHorizontal: 5,
   },
@@ -329,7 +356,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 30,
     overflow: 'hidden',
-    marginTop: 10
+    marginTop: 15,
   },
   imageRow: {
     flexDirection: 'row',
@@ -340,4 +367,50 @@ const styles = StyleSheet.create({
     margin: 0.5,
     borderRadius: 3,
   },
+  bigImage: {
+    width: 60,
+    height: 60,
+    margin: 5,
+    borderRadius: 10,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginHorizontal: 10,
+    marginVertical: 6,
+  },
+  rowReverse: {
+    flexDirection: 'row-reverse',
+  },
+  avatar: {
+    position:'relative',
+    top:-40,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+  },
+  timestampContainer: {
+    position:'relative',
+    top:260,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginVertical: 10,
+  marginHorizontal: 10,
+},
+
+timestamp: {
+  
+  color: '#888',
+  fontSize: 13,
+  marginHorizontal: 8,
+},
+
+line: {
+  flex: 1,
+  height: 1,
+  backgroundColor: '#ccc',
+},
+
 });
