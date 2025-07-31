@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,11 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
+import axios from 'axios';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -18,38 +22,40 @@ import img1 from '../assets/image1.jpg';
 import img2 from '../assets/image2.jpg';
 import img3 from '../assets/image3.jpg';
 import img4 from '../assets/image4.jpg';
-import group4 from '../assets/Group4.png';
-import profile from '../assets/Profile.png'
-import group1 from '../assets/Group1.png'
 
 const ChatScreen = () => {
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
-      sender: { self: false, avatar: group1 },
-    },
-    {
-      id: 2,
-      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
-      sender: { self: false, avatar:  profile},
-    },
-    {
-      id: 3,
-      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
-      sender: { self: true, avatar: img2 },
-    },
-    {
-      id: 4,
-      message: 'Connect with fellow travelers, share the ride and save money Connect with fellow travelers, share the ride and save money',
-      sender: { self: false, avatar: group4 },
-    },
-  ]);
-
+  const [messages, setMessages] = useState([]);
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [inputMessage, setInputMessage] = useState('');
   const [showActions, setShowActions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showPicture, setShowPicture] = useState(false);
+
+  const inputRef = useRef(null);
+
+  const fetchMessages = async () => {
+    if (loading || !hasMore) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(`https://qa.corider.in/assignment/chat?page=${page}`);
+      const newMessages = res.data.chats;
+      if (newMessages.length > 0) {
+        setMessages(prev => [...newMessages.reverse(), ...prev]);
+        setPage(prev => prev + 1);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchMessages();
+  }, []);
 
   const handleSend = () => {
     if (!inputMessage.trim()) return;
@@ -58,158 +64,179 @@ const ChatScreen = () => {
       message: inputMessage,
       sender: { self: true },
     };
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [newMessage, ...prev]); // Adds at top (which appears at bottom of screen due to inverted)
+
     setInputMessage('');
+  };
+
+  const formatTime = timestamp => {
+    if (!timestamp) return '';
+    const [_, timePart] = timestamp.split(' ');
+    const [hour, minute] = timePart.split(':');
+    return `${hour}:${minute}`;
   };
 
   const renderItem = ({ item }) => (
     <View style={[styles.messageRow, item.sender.self ? styles.rowReverse : null]}>
-      {!item.sender.self && item.sender.avatar && (
-        <Image source={item.sender.avatar} style={styles.avatar} />
+      {!item.sender.self && item.sender.image && (
+        <Image source={{ uri: item.sender.image }} style={styles.avatar} />
       )}
-      <View style={[styles.messageContainer, item.sender.self ? styles.self : styles.other]}>
-        <Text style={[styles.messageText, item.sender.self ? styles.selfText : styles.otherText]}>
-          {item.message}
-        </Text>
+      <View>
+        <View style={[styles.messageContainer, item.sender.self ? styles.self : styles.other]}>
+          <Text style={[styles.messageText, item.sender.self ? styles.selfText : styles.otherText]}>
+            {item.message.replace(/<br\s*\/?>/gi, '\n')}
+          </Text>
+        </View>
+        {item.time && (
+          <Text
+            style={[
+              styles.timestampText,
+              item.sender.self ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' },
+            ]}
+          >
+            {formatTime(item.time)}
+          </Text>
+        )}
       </View>
     </View>
   );
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={80}
-    >
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={{ top: 18 }}>
-            <TouchableOpacity style={styles.backButton}>
-              <Icon name="arrow-back" size={30} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setShowPicture(true)} style={styles.imageGroup}>
-              <View style={styles.imageRow}>
-                <Image source={img1} style={styles.smallImage} />
-                <Image source={img2} style={styles.smallImage} />
-              </View>
-              <View style={styles.imageRow}>
-                <Image source={img3} style={styles.smallImage} />
-                <Image source={img4} style={styles.smallImage} />
-              </View>
-            </TouchableOpacity>
-          </View>
-          <View style={{ marginTop: 20 }}>
-            <View style={{ flexDirection: 'row' }}>
-              <Text style={styles.tripTitle}>Trip 1</Text>
-              <Icon2 name="square-edit-outline" size={30} color="black" style={{ left: 230 }} />
-            </View>
-            <View style={{ top: 15 }}>
-              <Text style={styles.subHeader}>
-                From <Text style={{ fontWeight: 'bold' }}>IGI Airport, T3</Text>
-              </Text>
-              <Text style={styles.subHeader}>
-                To <Text style={{ fontWeight: 'bold' }}>Sector 28</Text>
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={{ top: 40 }}>
-          <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
-            <Icon name="more-vert" size={30} color="black" />
-          </TouchableOpacity>
-
-          {showMenu && (
-            <View style={styles.dropdownMenu}>
-              <TouchableOpacity style={styles.menuItem}>
-                <Icon2 name="account-group-outline" size={20} color="black" />
-                <Text style={{ fontSize: 14, fontWeight: '600' }}>Members</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem}>
-                <Icon2 name="phone-outline" size={20} color="black" />
-                <Text style={{ fontSize: 14, fontWeight: '600' }}>Share Number</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.menuItem}>
-                <Icon2 name="alert-outline" size={20} color="black" />
-                <Text style={{ fontSize: 14, fontWeight: '600' }}>Report</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* Modal for group photos */}
-      <Modal visible={showPicture} transparent animationType="fade">
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          onPress={() => setShowPicture(false)}
-          activeOpacity={1}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
         >
-          <View>
-            <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Group Members</Text>
-            <View style={styles.imageGroup}>
-              <View style={styles.imageRow}>
-                <Image source={img1} style={styles.bigImage} />
-                <Image source={img2} style={styles.bigImage} />
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.headerLeft}>
+              <View style={{top:-5}}>
+                <TouchableOpacity style={styles.backButton}>
+                  <Icon name="arrow-back" size={30} color="black" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowPicture(true)} style={styles.imageGroup}>
+                  <View style={styles.imageRow}>
+                    <Image source={img1} style={styles.smallImage} />
+                    <Image source={img2} style={styles.smallImage} />
+                  </View>
+                  <View style={styles.imageRow}>
+                    <Image source={img3} style={styles.smallImage} />
+                    <Image source={img4} style={styles.smallImage} />
+                  </View>
+                </TouchableOpacity>
               </View>
-              <View style={styles.imageRow}>
-                <Image source={img3} style={styles.bigImage} />
-                <Image source={img4} style={styles.bigImage} />
+              <View style={{ marginTop: -30 }}>
+                <View style={{ flexDirection: 'row' }}>
+                  <Text style={styles.tripTitle}>Trip 1</Text>
+                  <Icon2 name="square-edit-outline" size={30} color="black" style={{ left: 215 }} />
+                </View>
+                <View style={{ top: 15 }}>
+                  <Text style={styles.subHeader}>
+                    From <Text style={{ fontWeight: 'bold' }}>IGI Airport, T3</Text>
+                  </Text>
+                  <Text style={styles.subHeader}>
+                    To <Text style={{ fontWeight: 'bold' }}>Sector 28</Text>
+                  </Text>
+                </View>
               </View>
             </View>
+            <View style={{top:20,left:0  }}>
+              <TouchableOpacity onPress={() => setShowMenu(!showMenu)}>
+                <Icon name="more-vert" size={30} color="black" />
+              </TouchableOpacity>
+              {showMenu && (
+                <View style={styles.dropdownMenu}>
+                  <TouchableOpacity style={styles.menuItem}>
+                    <Icon2 name="account-group-outline" size={20} color="black" />
+                    <Text style={styles.menuText}>Members</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuItem}>
+                    <Icon2 name="phone-outline" size={20} color="black" />
+                    <Text style={styles.menuText}>Share Number</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.menuItem}>
+                    <Icon2 name="alert-outline" size={20} color="black" />
+                    <Text style={styles.menuText}>Report</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
-        </TouchableOpacity>
-      </Modal>
 
-      {/* Chat Area */}
-      <View style={{flex:1}}>
-        <View style={styles.timestampContainer}>
-  <View style={styles.line} />
-  <Text style={styles.timestamp}>12 JAN, 2023</Text>
-  <View style={styles.line} />
-</View>
+          {/* Modal for Picture */}
+          <Modal visible={showPicture} transparent animationType="fade">
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              onPress={() => setShowPicture(false)}
+              activeOpacity={1}
+            >
+              <View>
+                <Text style={{ color: 'white', fontSize: 18, marginBottom: 10 }}>Group Members</Text>
+                <View style={styles.imageGroup}>
+                  <View style={styles.imageRow}>
+                    <Image source={img1} style={styles.bigImage} />
+                    <Image source={img2} style={styles.bigImage} />
+                  </View>
+                  <View style={styles.imageRow}>
+                    <Image source={img3} style={styles.bigImage} />
+                    <Image source={img4} style={styles.bigImage} />
+                  </View>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </Modal>
 
-        <FlatList
-          inverted
-          data={messages}
-          keyExtractor={item => item.id.toString()}
-          renderItem={renderItem}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingBottom: 10 }}
-        />
-      </View>
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Reply to @Rohit Yadav"
-          value={inputMessage}
-          onChangeText={setInputMessage}
-          placeholderTextColor="#999"
-        />
-        <TouchableOpacity onPress={() => setShowActions(!showActions)} style={styles.iconButton}>
-          <Icon name="attach-file" size={22} color="#444" />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSend} style={styles.iconButton}>
-          <Icon name="send" size={22} color="#444" />
-        </TouchableOpacity>
+          {/* Chat List */}
+          <FlatList
+            inverted
+            data={messages}
+            keyExtractor={item => item.id.toString()}
+            renderItem={renderItem}
+            keyboardShouldPersistTaps="handled"
+            onEndReached={fetchMessages}
+            onEndReachedThreshold={0.2}
+            contentContainerStyle={{ paddingBottom: 10 }}
+            ListFooterComponent={loading ? <ActivityIndicator size="small" color="#555" /> : null}
+            style={{ flex: 1 }}
+          />
 
-        {showActions && (
-          <View style={styles.actionBubble}>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Icon2 name="camera-outline" size={22} color="#fff" />
+          {/* Input Area */}
+          <View style={styles.inputContainer}>
+            <TextInput
+              ref={inputRef}
+              style={styles.input}
+              placeholder="Reply to @Rohit Yadav"
+              value={inputMessage}
+              onChangeText={setInputMessage}
+              placeholderTextColor="#999"
+              onFocus={() => console.log('Input focused')}
+            />
+            <TouchableOpacity onPress={() => setShowActions(!showActions)} style={styles.iconButton}>
+              <Icon name="attach-file" size={22} color="#444" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Icon2 name="video-outline" size={22} color="#fff" />
+            <TouchableOpacity onPress={handleSend} style={styles.iconButton}>
+              <Icon name="send" size={22} color="#444" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionIcon}>
-              <Icon2 name="file-document-outline" size={22} color="#fff" />
-            </TouchableOpacity>
+            {showActions && (
+              <View style={styles.actionBubble}>
+                <TouchableOpacity style={styles.actionIcon}>
+                  <Icon2 name="camera-outline" size={22} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionIcon}>
+                  <Icon2 name="video-outline" size={22} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionIcon}>
+                  <Icon2 name="file-document-outline" size={22} color="#fff" />
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
-        )}
+          <View style={{height:40}}></View>
+        </KeyboardAvoidingView>
       </View>
-      <View style={{height:50}}></View>
-    </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -220,7 +247,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'rgba(255, 250, 245, 1)' },
   header: {
     padding: 15,
-    height: 150,
+    
     backgroundColor: '#f3f3f3',
     borderBottomWidth: 1,
     borderColor: '#ddd',
@@ -268,6 +295,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     maxWidth: '80%',
+    minWidth: '25%'
   },
   self: {
     alignSelf: 'flex-end',
@@ -305,9 +333,7 @@ const styles = StyleSheet.create({
 
 input: {
   flex: 1,
-  
   backgroundColor:'white',
-  
   paddingHorizontal: 15,
   backgroundColor: '#f5f5f5',
   marginRight: 6,
@@ -337,10 +363,6 @@ actionBubble: {
 actionIcon: {
   marginHorizontal: 6,
 },
-
-  iconButton: {
-    paddingHorizontal: 5,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.9)',
@@ -375,7 +397,7 @@ actionIcon: {
   },
   messageRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+   
     marginHorizontal: 10,
     marginVertical: 6,
   },
@@ -384,7 +406,7 @@ actionIcon: {
   },
   avatar: {
     position:'relative',
-    top:-40,
+    top:10,
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -400,11 +422,11 @@ actionIcon: {
   marginHorizontal: 10,
 },
 
-timestamp: {
-  
+timestampText: {
+  fontSize: 14,
   color: '#888',
-  fontSize: 13,
-  marginHorizontal: 8,
+  marginTop: 2,
+  marginHorizontal: 4,
 },
 
 line: {
